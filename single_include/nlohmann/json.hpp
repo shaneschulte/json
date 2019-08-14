@@ -13726,7 +13726,8 @@ class serializer
     void dump(const BasicJsonType& val, const bool pretty_print,
               const bool ensure_ascii,
               const unsigned int indent_step,
-              const unsigned int current_indent = 0)
+              const unsigned int current_indent = 0,
+	      const bool quote_strings = true)
     {
         switch (val.m_type)
         {
@@ -13864,9 +13865,9 @@ class serializer
 
             case value_t::string:
             {
-                o->write_character('\"');
+                if(quote_strings) o->write_character('\"');
                 dump_escaped(*val.m_value.string, ensure_ascii);
-                o->write_character('\"');
+                if(quote_strings) o->write_character('\"');
                 return;
             }
 
@@ -16383,11 +16384,11 @@ class basic_json
 
         if (indent >= 0)
         {
-            s.dump(*this, true, ensure_ascii, static_cast<unsigned int>(indent));
+            s.dump(*this, true, ensure_ascii, static_cast<unsigned int>(indent), 0, !this->is_string());
         }
         else
         {
-            s.dump(*this, false, ensure_ascii, 0);
+            s.dump(*this, false, ensure_ascii, 0, 0, !this->is_string());
         }
 
         return result;
@@ -20466,7 +20467,7 @@ class basic_json
 
         // do the actual serialization
         serializer s(detail::output_adapter<char>(o), o.fill());
-        s.dump(j, pretty_print, false, static_cast<unsigned int>(indentation));
+        s.dump(j, pretty_print, false, static_cast<unsigned int>(indentation), 0, !j.is_string());
         return o;
     }
 
